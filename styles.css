@@ -10,9 +10,10 @@ body {
 
 .container {
     width: 80%;
-    margin: 3.5rem auto;
+    margin: auto !important;
+    margin-top: 40px !important;
     background: rgba(255,255,255,0.25);
-    padding: 32px 26px 24px 26px;
+   padding: 5px 19px 21px 18px;
     border-radius: 24px;
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
     backdrop-filter: blur(8px);
@@ -31,7 +32,7 @@ h1 {
     text-align: center;
     color: white;
     font-size: 2.7rem;
-    margin-bottom: 38px;
+    margin: 15px;
     letter-spacing: 2px;
     font-weight: 800;
     text-shadow: 0 2px 16px rgba(127,83,172,0.08);
@@ -40,7 +41,7 @@ h1 {
 .main-content {
     display: flex;
     flex-direction: row;
-    gap: 40px;
+    gap: 20px;
     min-height: 320px;
     justify-content: center;
 }
@@ -81,7 +82,7 @@ h1 {
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
-    gap: 32px;
+    gap: 2px;
 }
 .controls {
     display: flex;
@@ -118,7 +119,7 @@ h1 {
 
 .buttons {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     gap: 18px;
     margin-top: 10px;
 
@@ -131,12 +132,13 @@ button {
     border: none;
     border-radius: 24px;
     font-size: 1.15rem;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 4px 18px rgba(127,83,172,0.10);
+    box-shadow: 0 4px 18px rgba(127, 83, 172, 0.10);
     transition: background 0.2s, transform 0.13s, box-shadow 0.2s;
     letter-spacing: 0.7px;
     outline: none;
+    width: 200px;
 }
 
 button:hover {
@@ -177,12 +179,15 @@ button:hover, button:focus {
 
 
 .footer {
-   background: linear-gradient(120deg, #373B44 0%, #4286f4 100%);
+    background: linear-gradient(120deg, #373B44 0%, #4286f4 100%);
     color: #fff;
     padding: 10px;
     text-align: center;
-    margin-top: 10px;
     box-shadow: 0 -2px 16px rgba(60,60,110,0.08);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
 }
 
 .footer-content {
