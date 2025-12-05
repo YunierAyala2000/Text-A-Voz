@@ -8,7 +8,8 @@ let tiempoInicio = null;
 function calcularTiempoTotal(texto, velocidad) {
   // Promedio de 180 palabras por minuto a velocidad 1
   const palabras = texto.trim().split(/\s+/).length;
-  const minutos = palabras / (180 * velocidad);
+  const palabrasPorMinuto = 180 * velocidad;
+  const minutos = palabras / palabrasPorMinuto;
   const segundos = minutos * 60;
   return segundos;
 }
@@ -85,7 +86,8 @@ escucharBtn.addEventListener("click", () => {
   tiempoInicio = Date.now();
   clearInterval(timerInterval);
   timerInterval = setInterval(() => {
-    const transcurrido = (Date.now() - tiempoInicio) / 1000;
+    let transcurrido = (Date.now() - tiempoInicio) / 1000;
+    if (transcurrido > segundosTotales) transcurrido = segundosTotales;
     tiempoActualSpan.textContent = `Transcurrido: ${formatoTiempo(
       transcurrido
     )}`;
@@ -99,7 +101,7 @@ escucharBtn.addEventListener("click", () => {
     escucharBtn.dataset.estado = "detenido";
     clearInterval(timerInterval);
     tiempoActualSpan.textContent = `Transcurrido: ${formatoTiempo(
-      (Date.now() - tiempoInicio) / 1000
+      segundosTotales
     )}`;
   };
   utter.onerror = function () {
