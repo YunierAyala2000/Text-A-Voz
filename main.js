@@ -1,5 +1,25 @@
 // main.js
 // Manejo de voces y síntesis de voz
+const tiempoTotalSpan = document.getElementById("tiempo-total");
+const tiempoActualSpan = document.getElementById("tiempo-actual");
+let timerInterval = null;
+let tiempoInicio = null;
+
+function calcularTiempoTotal(texto, velocidad) {
+  // Promedio de 180 palabras por minuto a velocidad 1
+  const palabras = texto.trim().split(/\s+/).length;
+  const minutos = palabras / (180 * velocidad);
+  const segundos = minutos * 60;
+  return segundos;
+}
+
+function formatoTiempo(segundos) {
+  const min = Math.floor(segundos / 60);
+  const sec = Math.floor(segundos % 60);
+  return `${min.toString().padStart(2, "0")}:${sec
+    .toString()
+    .padStart(2, "0")}`;
+}
 let voices = [];
 const textoInput = document.getElementById("texto");
 const vozSelect = document.getElementById("voz");
@@ -40,6 +60,8 @@ escucharBtn.addEventListener("click", () => {
     window.speechSynthesis.cancel();
     escucharBtn.textContent = "Escuchar";
     escucharBtn.dataset.estado = "detenido";
+    clearInterval(timerInterval);
+    tiempoActualSpan.textContent = "Transcurrido: 00:00";
     return;
   }
 
@@ -54,13 +76,37 @@ escucharBtn.addEventListener("click", () => {
   escucharBtn.textContent = "Detener";
   escucharBtn.dataset.estado = "reproduciendo";
 
+  // Calcular y mostrar tiempo total estimado
+  const segundosTotales = calcularTiempoTotal(texto, utter.rate);
+  tiempoTotalSpan.textContent = `Tiempo total: ${formatoTiempo(
+    segundosTotales
+  )}`;
+  tiempoActualSpan.textContent = "Transcurrido: 00:00";
+  tiempoInicio = Date.now();
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    const transcurrido = (Date.now() - tiempoInicio) / 1000;
+    tiempoActualSpan.textContent = `Transcurrido: ${formatoTiempo(
+      transcurrido
+    )}`;
+    if (transcurrido >= segundosTotales) {
+      clearInterval(timerInterval);
+    }
+  }, 500);
+
   utter.onend = function () {
     escucharBtn.textContent = "Escuchar";
     escucharBtn.dataset.estado = "detenido";
+    clearInterval(timerInterval);
+    tiempoActualSpan.textContent = `Transcurrido: ${formatoTiempo(
+      (Date.now() - tiempoInicio) / 1000
+    )}`;
   };
   utter.onerror = function () {
     escucharBtn.textContent = "Escuchar";
     escucharBtn.dataset.estado = "detenido";
+    clearInterval(timerInterval);
+    tiempoActualSpan.textContent = "Transcurrido: 00:00";
   };
 
   window.speechSynthesis.speak(utter);

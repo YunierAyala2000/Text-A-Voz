@@ -26,7 +26,13 @@ body {
     to { opacity: 1; transform: none; }
 }
 
-
+.voice-timer{
+    margin-top: 10px;
+    font-size: 0.95rem;
+    text-align: center !important;
+    color: #000000;
+    font-weight: 500;
+}
 
 h1 {
     text-align: center;
