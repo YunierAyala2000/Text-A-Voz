@@ -193,6 +193,20 @@ a {
 @media (max-width: 880px) {
   .layout {
     width: 96%;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .card {
+    padding: 18px 16px 14px;
+  }
+
+  .textarea {
+    min-height: 220px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -443,36 +457,29 @@ label {
   .topbar__title {
     font-size: 1.1rem;
   }
-  .topbar__subtitle {
-    font-size: 0.8rem;
-  }
-  .layout {
-    margin: 24px auto 64px;
-  }
-  .button {
-    width: 100%;
-  }
-  .actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-}
 
-@media (max-width: 520px) {
-  .topbar__title {
-    font-size: 1.1rem;
-  }
   .topbar__subtitle {
     font-size: 0.8rem;
   }
+
+  .topbar {
+    padding: 14px 16px;
+  }
+
   .layout {
     margin: 24px auto 64px;
   }
+
   .button {
     width: 100%;
   }
+
   .actions {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .footer__inner {
+    padding: 0 12px;
   }
 }
