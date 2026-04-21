@@ -37,16 +37,137 @@ escucharBtn.dataset.estado = "detenido";
 const descargarBtn = document.getElementById("descargar");
 const detenerBtn = document.getElementById("detener");
 const textoLectura = document.getElementById("texto-lectura");
+const idiomaSelect = document.getElementById("idioma");
+
+// Mapa de códigos de idioma a nombre legible
+const NOMBRES_IDIOMA = {
+  af: "Afrikáans",
+  ar: "Árabe",
+  bg: "Búlgaro",
+  bn: "Bengalí",
+  ca: "Catalán",
+  cs: "Checo",
+  cy: "Galés",
+  da: "Danés",
+  de: "Alemán",
+  el: "Griego",
+  en: "Inglés",
+  es: "Español",
+  et: "Estoniano",
+  eu: "Euskera",
+  fi: "Finlandés",
+  fil: "Filipino",
+  fr: "Francés",
+  gl: "Gallego",
+  gu: "Gujarati",
+  he: "Hebreo",
+  hi: "Hindi",
+  hr: "Croata",
+  hu: "Húngaro",
+  hy: "Armenio",
+  id: "Indonesio",
+  is: "Islandés",
+  it: "Italiano",
+  ja: "Japonés",
+  ka: "Georgiano",
+  km: "Jemer",
+  kn: "Canarés",
+  ko: "Coreano",
+  lo: "Lao",
+  lt: "Lituano",
+  lv: "Letón",
+  mk: "Macedonio",
+  ml: "Malayalam",
+  mr: "Maratí",
+  ms: "Malayo",
+  my: "Birmano",
+  nb: "Noruego",
+  ne: "Nepalés",
+  nl: "Neerlandés",
+  pa: "Punjabi",
+  pl: "Polaco",
+  pt: "Portugués",
+  ro: "Rumano",
+  ru: "Ruso",
+  si: "Cingalés",
+  sk: "Eslovaco",
+  sl: "Esloveno",
+  sq: "Albanés",
+  sr: "Serbio",
+  su: "Sundanés",
+  sv: "Sueco",
+  sw: "Suajili",
+  ta: "Tamil",
+  te: "Telugu",
+  th: "Tailandés",
+  tr: "Turco",
+  uk: "Ucraniano",
+  ur: "Urdu",
+  vi: "Vietnamita",
+  zh: "Chino",
+  zu: "Zulú",
+};
+
+function nombreIdioma(lang) {
+  const base = lang.split("-")[0].toLowerCase();
+  const region = lang.includes("-") ? ` (${lang.split("-")[1]})` : "";
+  const nombre = NOMBRES_IDIOMA[base];
+  return nombre ? `${nombre}${region}` : lang;
+}
+
+function filtrarVocesPorIdioma() {
+  const langSeleccionado = idiomaSelect.value;
+  vozSelect.innerHTML = "";
+  const filtradas = langSeleccionado
+    ? voices.filter((v) => v.lang === langSeleccionado)
+    : voices;
+  if (filtradas.length === 0) {
+    const opt = document.createElement("option");
+    opt.textContent = "Sin voces para este idioma";
+    opt.disabled = true;
+    vozSelect.appendChild(opt);
+    return;
+  }
+  filtradas.forEach((voice) => {
+    const i = voices.indexOf(voice);
+    const option = document.createElement("option");
+    option.value = i;
+    option.textContent = voice.name;
+    vozSelect.appendChild(option);
+  });
+}
 
 function cargarVoces() {
   voices = window.speechSynthesis.getVoices();
-  vozSelect.innerHTML = "";
-  voices.forEach((voice, i) => {
-    const option = document.createElement("option");
-    option.value = i;
-    option.textContent = `${voice.name} (${voice.lang})`;
-    vozSelect.appendChild(option);
+
+  // Construir selector de idiomas con todos los disponibles
+  const idiomaActual = idiomaSelect.value;
+  const langs = [...new Set(voices.map((v) => v.lang))].sort((a, b) => {
+    // Español primero
+    const aEs = a.startsWith("es");
+    const bEs = b.startsWith("es");
+    if (aEs && !bEs) return -1;
+    if (!aEs && bEs) return 1;
+    return nombreIdioma(a).localeCompare(nombreIdioma(b), "es");
   });
+
+  idiomaSelect.innerHTML = '<option value="">— Todos los idiomas —</option>';
+  langs.forEach((lang) => {
+    const option = document.createElement("option");
+    option.value = lang;
+    option.textContent = nombreIdioma(lang);
+    idiomaSelect.appendChild(option);
+  });
+
+  // Restaurar selección previa o seleccionar español por defecto
+  if (idiomaActual && langs.includes(idiomaActual)) {
+    idiomaSelect.value = idiomaActual;
+  } else {
+    const esDefault = langs.find((l) => l.startsWith("es"));
+    idiomaSelect.value = esDefault || "";
+  }
+
+  filtrarVocesPorIdioma();
 }
 
 window.speechSynthesis.onvoiceschanged = cargarVoces;
@@ -58,6 +179,8 @@ tonoInput.addEventListener("input", () => {
 velocidadInput.addEventListener("input", () => {
   velocidadValor.textContent = velocidadInput.value;
 });
+
+idiomaSelect.addEventListener("change", filtrarVocesPorIdioma);
 
 function escapeHtml(str) {
   return str
