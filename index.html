@@ -36,6 +36,7 @@
         <p class="card__note">Tu voz se generará automáticamente al presionar "Escuchar".</p>
       </div>
       <textarea id="texto" class="textarea" placeholder="Escribe aquí lo que quieras escuchar..." rows="10"></textarea>
+      <div id="texto-lectura" class="texto-lectura" hidden></div>
       <div class="hint">Tip: puedes pegar texto largo o escribir frases cortas, incluso preguntas.</div>
     </section>
 
@@ -79,8 +80,9 @@
       </div>
 
       <div class="actions">
-        <button id="escuchar" class="button button--primary">Escuchar</button>
-        <button id="descargar" class="button button--secondary">Descargar</button>
+        <button id="escuchar" class="button button--primary">&#9654; Escuchar</button>
+        <button id="detener" class="button button--danger" hidden>&#9209; Detener</button>
+        <button id="descargar" class="button button--secondary">&#8595; Descargar</button>
       </div>
     </aside>
   </main>

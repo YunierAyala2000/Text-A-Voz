@@ -4,6 +4,8 @@ const tiempoTotalSpan = document.getElementById("tiempo-total");
 const tiempoActualSpan = document.getElementById("tiempo-actual");
 let timerInterval = null;
 let tiempoInicio = null;
+let tiempoAcumulado = 0;
+let segundosTotalesActual = 0;
 
 function calcularTiempoTotal(texto, velocidad) {
   // Promedio de 180 palabras por minuto a velocidad 1
@@ -30,10 +32,11 @@ const velocidadInput = document.getElementById("velocidad");
 const velocidadValor = document.getElementById("velocidad-valor");
 const emocionSelect = document.getElementById("emocion");
 const escucharBtn = document.getElementById("escuchar");
-escucharBtn.textContent = "Escuchar";
+escucharBtn.textContent = "▶ Escuchar";
 escucharBtn.dataset.estado = "detenido";
 const descargarBtn = document.getElementById("descargar");
 const detenerBtn = document.getElementById("detener");
+const textoLectura = document.getElementById("texto-lectura");
 
 function cargarVoces() {
   voices = window.speechSynthesis.getVoices();
@@ -56,65 +59,131 @@ velocidadInput.addEventListener("input", () => {
   velocidadValor.textContent = velocidadInput.value;
 });
 
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function mostrarTextoConResaltado(texto, charIndex, charLength) {
+  const antes = escapeHtml(texto.substring(0, charIndex));
+  const palabra = escapeHtml(
+    texto.substring(charIndex, charIndex + charLength),
+  );
+  const despues = escapeHtml(texto.substring(charIndex + charLength));
+  textoLectura.innerHTML = `${antes}<mark class="palabra-actual">${palabra}</mark>${despues}`;
+  const mark = textoLectura.querySelector(".palabra-actual");
+  if (mark) mark.scrollIntoView({ block: "nearest", behavior: "smooth" });
+}
+
+function detenerReproduccion() {
+  window.speechSynthesis.cancel();
+  escucharBtn.textContent = "▶ Escuchar";
+  escucharBtn.dataset.estado = "detenido";
+  detenerBtn.hidden = true;
+  textoLectura.hidden = true;
+  textoInput.hidden = false;
+  clearInterval(timerInterval);
+  tiempoAcumulado = 0;
+  tiempoActualSpan.textContent = "Transcurrido: 00:00";
+}
+
+detenerBtn.addEventListener("click", detenerReproduccion);
+
 escucharBtn.addEventListener("click", () => {
-  if (escucharBtn.dataset.estado === "reproduciendo") {
-    window.speechSynthesis.cancel();
-    escucharBtn.textContent = "Escuchar";
-    escucharBtn.dataset.estado = "detenido";
+  const estado = escucharBtn.dataset.estado;
+
+  if (estado === "reproduciendo") {
+    // Pausar
+    window.speechSynthesis.pause();
+    escucharBtn.textContent = "▶ Continuar";
+    escucharBtn.dataset.estado = "pausado";
+    tiempoAcumulado += (Date.now() - tiempoInicio) / 1000;
     clearInterval(timerInterval);
-    tiempoActualSpan.textContent = "Transcurrido: 00:00";
     return;
   }
 
+  if (estado === "pausado") {
+    // Reanudar
+    window.speechSynthesis.resume();
+    escucharBtn.textContent = "⏸ Pausar";
+    escucharBtn.dataset.estado = "reproduciendo";
+    tiempoInicio = Date.now();
+    timerInterval = setInterval(() => {
+      let transcurrido = tiempoAcumulado + (Date.now() - tiempoInicio) / 1000;
+      if (transcurrido > segundosTotalesActual)
+        transcurrido = segundosTotalesActual;
+      tiempoActualSpan.textContent = `Transcurrido: ${formatoTiempo(transcurrido)}`;
+      if (transcurrido >= segundosTotalesActual) clearInterval(timerInterval);
+    }, 500);
+    return;
+  }
+
+  // Estado "detenido" → iniciar reproducción
   const texto = textoInput.value;
   if (!texto.trim()) return;
+
   const utter = new SpeechSynthesisUtterance(texto);
   const vozIndex = vozSelect.value;
   utter.voice = voices[vozIndex];
   ajustarEmocion(utter);
   utter.rate = parseFloat(velocidadInput.value);
 
-  escucharBtn.textContent = "Detener";
+  escucharBtn.textContent = "⏸ Pausar";
   escucharBtn.dataset.estado = "reproduciendo";
+  detenerBtn.hidden = false;
 
-  // Calcular y mostrar tiempo total estimado
-  const segundosTotales = calcularTiempoTotal(texto, utter.rate);
-  tiempoTotalSpan.textContent = `Tiempo total: ${formatoTiempo(
-    segundosTotales
-  )}`;
+  // Ocultar textarea y mostrar el área de lectura
+  textoInput.hidden = true;
+  textoLectura.textContent = texto;
+  textoLectura.hidden = false;
+  textoLectura.scrollTop = 0;
+
+  // Tiempo total estimado
+  segundosTotalesActual = calcularTiempoTotal(texto, utter.rate);
+  tiempoTotalSpan.textContent = `Tiempo total: ${formatoTiempo(segundosTotalesActual)}`;
   tiempoActualSpan.textContent = "Transcurrido: 00:00";
+  tiempoAcumulado = 0;
   tiempoInicio = Date.now();
   clearInterval(timerInterval);
   timerInterval = setInterval(() => {
-    let transcurrido = (Date.now() - tiempoInicio) / 1000;
-    if (transcurrido > segundosTotales) transcurrido = segundosTotales;
-    tiempoActualSpan.textContent = `Transcurrido: ${formatoTiempo(
-      transcurrido
-    )}`;
-    if (transcurrido >= segundosTotales) {
-      clearInterval(timerInterval);
-    }
+    let transcurrido = tiempoAcumulado + (Date.now() - tiempoInicio) / 1000;
+    if (transcurrido > segundosTotalesActual)
+      transcurrido = segundosTotalesActual;
+    tiempoActualSpan.textContent = `Transcurrido: ${formatoTiempo(transcurrido)}`;
+    if (transcurrido >= segundosTotalesActual) clearInterval(timerInterval);
   }, 500);
 
-  utter.onend = function () {
-    escucharBtn.textContent = "Escuchar";
-    escucharBtn.dataset.estado = "detenido";
-    clearInterval(timerInterval);
-    tiempoActualSpan.textContent = `Transcurrido: ${formatoTiempo(
-      segundosTotales
-    )}`;
+  // Resaltar la palabra que se está leyendo
+  utter.onboundary = function (event) {
+    if (event.name === "word") {
+      const idx = event.charIndex;
+      const len =
+        event.charLength !== undefined
+          ? event.charLength
+          : (texto.substring(event.charIndex).match(/^\S+/) || [""])[0].length;
+      mostrarTextoConResaltado(texto, idx, len);
+    }
   };
-  utter.onerror = function () {
-    escucharBtn.textContent = "Escuchar";
+
+  utter.onend = function () {
+    escucharBtn.textContent = "▶ Escuchar";
     escucharBtn.dataset.estado = "detenido";
+    detenerBtn.hidden = true;
+    textoLectura.hidden = true;
+    textoInput.hidden = false;
     clearInterval(timerInterval);
-    tiempoActualSpan.textContent = "Transcurrido: 00:00";
+    tiempoActualSpan.textContent = `Transcurrido: ${formatoTiempo(segundosTotalesActual)}`;
+  };
+
+  utter.onerror = function () {
+    detenerReproduccion();
   };
 
   window.speechSynthesis.speak(utter);
 });
-
-// Detener la reproducción de audio
 
 // Nueva grabación usando MediaRecorder y getDisplayMedia
 async function grabarYDescargar() {
@@ -134,7 +203,7 @@ async function grabarYDescargar() {
     });
   } catch (err) {
     alert(
-      "Debes permitir la captura de pantalla/ventana con audio para grabar la voz."
+      "Debes permitir la captura de pantalla/ventana con audio para grabar la voz.",
     );
     return;
   }
